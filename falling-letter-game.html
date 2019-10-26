@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Falling Letter Game</title>
+   
+    <script>
+        var score = 0;
+        var seconds = 20;
+        var gameOver = false;
+        var countdown = setInterval(countDown, 1000);
+
+        function countDown() {
+            if (seconds > 0) {
+                seconds -= 1;
+                document.getElementById('seconds-display').innerHTML = 'Time Left: ' + seconds;
+            } else {
+                if (!gameOver) {
+                    renderGameOver();
+                }
+                gameOver = true;
+            }
+        }
+
+        function createTimer() {
+            var secondsDisplay = document.createElement('p');
+            secondsDisplay.id = 'seconds-display';
+            secondsDisplay.style.height = '50px'
+            secondsDisplay.style.textAlign = 'center';
+            secondsDisplay.style.position = 'absolute';
+            secondsDisplay.style.top = '0px';
+            secondsDisplay.style.left = '50%';
+            secondsDisplay.style.transform = 'translateX(-50%)';
+            secondsDisplay.innerHTML = 'Time Left: ' + seconds;
+            document.body.append(secondsDisplay);
+        }
+
+        function removeTimer() {
+            var timer = document.getElementById('seconds-display');
+            timer.remove();
+        }
+
+        function createScore() {
+            var scoreParagraph = document.createElement('p');
+            scoreParagraph.id = 'score';
+            scoreParagraph.style.height = '50px'
+            scoreParagraph.style.textAlign = 'center';
+            document.body.appendChild(scoreParagraph);
+            renderScore();
+        }
+
+        function removeScore() {
+            var scoreDisplay = document.getElementById('score');
+            scoreDisplay.remove();
+        }
+
+        function renderScore() {
+            var scoreDisplay = document.getElementById('score');
+            scoreDisplay.innerHTML = 'Score: ' + score;
+        }
+
+        function createGameBox() {
+            createTimer();
+            
+            var div = document.createElement('div');
+            div.className = 'gameBox';
+            div.id = 'gameBoxDiv';
+            div.style.position = 'relative';
+            div.style.border = '1px solid black';
+            div.style.height = '500px';
+            div.style.width = '500px';
+            div.style.margin = '0 auto';
+            div.style.backgroundImage = 'url("images/flames.gif")';
+            div.style.backgroundRepeat = 'repeat-x';
+            div.style.backgroundPosition = 'bottom';
+            div.style.backgroundSize = 'auto 60px';
+            document.body.appendChild(div);
+
+            createScore();
+
+        }
+        
+        function clearGameBox() {
+            var gameBox = document.querySelector('.gameBox');
+            while(gameBox.firstChild) {
+                gameBox.removeChild(gameBox.firstChild);
+            }
+            gameBox.style.backgroundImage = 'none';
+            return gameBox;
+        }
+
+        function renderGameOver() {
+            var gameBox = clearGameBox();
+            removeTimer();
+            removeScore();
+
+            var textDisplay = document.createElement('p');
+            textDisplay.innerHTML = 'Game Over<br> Your score is: ' + score;
+            textDisplay.style.fontSize = '2em';
+            textDisplay.style.position = 'absolute';
+            textDisplay.style.top = '150px';
+            textDisplay.style.left = '50%';
+            textDisplay.style.transform = 'translateX(-50%)';
+            textDisplay.style.textAlign = 'center';
+
+            var replayButton  = document.createElement('button');
+            replayButton.innerHTML = 'Play Again?';
+            replayButton.style.backgroundColor = '#008CBA';
+            replayButton.style.color = 'white';
+            replayButton.style.fontSize = '1.5em';
+            replayButton.style.padding = '10px 20px';
+            replayButton.style.position = 'absolute';
+            replayButton.style.top = '270px';
+            replayButton.style.left = '50%';
+            replayButton.style.transform = 'translateX(-50%)';
+            replayButton.onclick = restartGame;
+            gameBox.appendChild(textDisplay);
+            gameBox.appendChild(replayButton);
+        }
+
+        function restartGame() {
+            var prevGame = clearGameBox();
+            prevGame.remove();
+            score = 0;
+            seconds = 20;
+            gameOver = false;
+            createGameBox();
+            clearInterval(countdown);
+            countdown = setInterval(countDown, 1000);
+            for (let i = 1; i <= 4; i++) {
+                addLetter();
+            }
+        }
+
+
+        function addLetter() {
+            var letterCode = Math.floor(Math.random() * 26) + 65;
+            var img = document.createElement('img');
+            img.id = String.fromCharCode(letterCode);
+            // alert(img.id);
+            img.src = 'images/letters/' + String.fromCharCode(letterCode) + '.png';
+            img.className = 'gamePiece';
+            img.style.position = 'absolute';
+            img.style.top = 0;
+            img.onclick = click;
+            var width = (Math.floor(Math.random() * 50) + 10);
+            var left = Math.floor((Math.random() * 500) + 1);
+            if (left > width) {
+                left = left - width;
+            }
+            img.style.left = left + 'px';
+            img.style.width = width + 'px';
+            img.style.height = width + 'px';
+
+            // alert(document.getElementsByClassName('gamePiece').length);
+            if (document.getElementsByClassName('gamePiece').length < 5 && gameOver == false) {
+                document.getElementById('gameBoxDiv').appendChild(img);
+                moveImage(img);
+            }
+        }
+
+        function moveImage(img) {
+            var speed = (Math.floor(Math.random() * 100) + 10);
+            var interval = setInterval(function () {
+                if (parseInt(img.style.top) == (500 - parseInt(img.style.height))) {
+                    explode(img);
+                    addLetter();
+                    clearInterval(interval);
+                } else {
+                    img.style.top = (parseInt(img.style.top) + 1) + 'px';
+                }
+            }, speed);
+        }
+
+        function poof(letter) {
+            letter.src = '/images/poof.webp';
+            setTimeout(() => {
+                letter.remove();
+            }, 1000);
+        }
+
+        function explode(letter) {
+            letter.src = '/images/explode.gif';
+            setTimeout(() => {
+                letter.remove();
+            }, 1500);
+        }
+
+        function click() {
+            if (this.width < 15) {
+                score += 20;
+            }
+            else if (this.width < 40) {
+                score += 10;
+            }
+            else {
+                score += 5;
+            }
+            poof(this);
+            addLetter();
+            document.getElementById('score').innerHTML = 'Score: ' + score;
+        }
+        function handleKeyPress(evt) {
+            var keycode = evt.which;
+            if (evt.which >= 65 && evt.which <= 90) {
+                // keycode += 32
+                typedLetter = String.fromCharCode(keycode);
+                var selectedLetter = document.getElementById(typedLetter);
+                if (selectedLetter == null) {
+                    score -= 5;
+                } else {
+                    poof(selectedLetter);
+                    score += 5;
+                    addLetter();
+                }
+                renderScore();                
+            }
+        }
+
+        onload = function () {
+            createGameBox();
+            for (let i = 1; i <= 4; i++) {
+                addLetter();
+            }
+        }
+        onkeydown = handleKeyPress;
+
+    </script>
+</head>
+
+<body style="padding-top: 50px; position: relative;">
+</body>
+
+</html>
